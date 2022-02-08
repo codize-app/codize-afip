@@ -1,1 +1,25 @@
-/* You can add global styles to this file, and also import other style files */
+@use '@angular/material' as mat;
+@import '~bootstrap/scss/bootstrap';
+@import '~bootstrap/scss/bootstrap-reboot';
+@import '~bootstrap/scss/bootstrap-grid';
+@import '~@angular/material/theming';
+
+@include mat.core();
+
+$codize-afip-primary: mat.define-palette(mat.$blue-palette, 700);
+$codize-afip-accent: mat.define-palette(mat.$blue-grey-palette, 900);
+
+$codize-afip-warn: mat.define-palette(mat.$red-palette);
+
+$codize-afip-theme: mat.define-light-theme((
+  color: (
+    primary: $codize-afip-primary,
+    accent: $codize-afip-accent,
+    warn: $codize-afip-warn,
+  )
+));
+
+@include mat.all-component-themes($codize-afip-theme);
+
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
