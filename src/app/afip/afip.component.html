@@ -1,1 +1,53 @@
-<p>afip works!</p>
+<div class="row mb-2">
+    <div class="col-6">
+        <button mat-raised-button color="primary" class="w-100" (click)="scanQR()">Escanear QR</button>
+    </div>
+    <div class="col-6">
+        <button mat-raised-button color="accent" class="w-100" (click)="exportToCSV()" [disabled]="invoices.length == 0">Exportar</button>
+    </div>
+</div>
+
+<button mat-raised-button color="primary" class="w-100" (click)="test()">TEST</button>
+
+<div *ngIf="invoices.length > 0" class="row">
+    <div class="col-12">
+        <table mat-table [dataSource]="invoices" class="mat-elevation-z8 w-100" multiTemplateDataRows>
+      
+            <ng-container matColumnDef="docName">
+              <th class="ps-2 pe-2" mat-header-cell *matHeaderCellDef> Tipo </th>
+              <td class="ps-2 pe-2" mat-cell *matCellDef="let element"> {{element.docName}} </td>
+            </ng-container>
+          
+            <ng-container matColumnDef="docNumber">
+              <th class="ps-2 pe-2" mat-header-cell *matHeaderCellDef> Número </th>
+              <td class="ps-2 pe-2" mat-cell *matCellDef="let element"> {{element.docNumber}} </td>
+            </ng-container>
+
+            <ng-container matColumnDef="expandedDetail">
+                <td class="ps-2 pe-2" mat-cell *matCellDef="let element" [attr.colspan]="displayedColumns.length">
+                  <div class="example-element-detail"
+                       [@detailExpand]="element == expandedElement ? 'expanded' : 'collapsed'">
+                    <div class="p-1 w-50 border-end">
+                        <span class="badge bg-secondary mb-1">{{element.date | date:'dd/MM/yyyy'}}</span><br />
+                        <h3 class="mb-1">{{element.amount | currency:'ARS':'symbol':'':'es-AR'}}</h3>
+                        <small><b>Moneda:</b> {{element.currency}}</small>
+                    </div>
+                    <div class="p-1 w-50">
+                        <h5 class="mb-1">{{element.docName}} {{element.docNumber}}</h5>
+                        <span><b>CUIT:</b> {{element.cuit}}</span>
+                    </div>
+                  </div>
+                </td>
+            </ng-container>
+
+            <tr class="ps-2 pe-2" mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr class="ps-2 pe-2" mat-row *matRowDef="let element; columns: displayedColumns;"
+                class="example-element-row"
+                [class.example-expanded-row]="expandedElement === element"
+                (click)="expandedElement = expandedElement === element ? null : element">
+            </tr>
+            <tr mat-row *matRowDef="let row; columns: ['expandedDetail']" class="example-detail-row ps-2 pe-2"></tr>
+          
+        </table>
+    </div>
+</div>

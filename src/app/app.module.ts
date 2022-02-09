@@ -2,8 +2,16 @@ import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { Routes, RouterModule } from '@angular/router';
 
+import { registerLocaleData } from '@angular/common';
+import locale from '@angular/common/locales/es-AR';
+import localeExtra from '@angular/common/locales/extra/es-AR';
+
+registerLocaleData(locale, 'es-AR', localeExtra);
+
 import { AppComponent } from './app.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+
+import { BarcodeScanner } from '@awesome-cordova-plugins/barcode-scanner/ngx';
 
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
@@ -31,7 +39,7 @@ const routes: Routes = [
     MatButtonModule,
     MatTableModule
   ],
-  providers: [],
+  providers: [BarcodeScanner],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

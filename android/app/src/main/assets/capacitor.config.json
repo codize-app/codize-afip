@@ -1,0 +1,6 @@
+{
+	"appId": "ar.codize.afip",
+	"appName": "Codize AFIP",
+	"webDir": "dist/codize-afip",
+	"bundledWebRuntime": false
+}

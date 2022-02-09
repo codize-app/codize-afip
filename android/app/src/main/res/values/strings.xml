@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Codize AFIP</string>
+    <string name="title_activity_main">Codize AFIP</string>
+    <string name="package_name">ar.codize.afip</string>
+    <string name="custom_url_scheme">ar.codize.afip</string>
+</resources>

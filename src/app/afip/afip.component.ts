@@ -1,15 +1,175 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
+import {animate, state, style, transition, trigger} from '@angular/animations';
+import { MatTable } from '@angular/material/table';
+import { BarcodeScanner } from '@awesome-cordova-plugins/barcode-scanner/ngx';
+
+export interface InvoiceElement {
+  docName: string;
+  docNumber: string;
+  cuit: string;
+  date: string;
+  amount: number;
+  currency: string;
+}
 
 @Component({
   selector: 'app-afip',
   templateUrl: './afip.component.html',
-  styleUrls: ['./afip.component.scss']
+  styleUrls: ['./afip.component.scss'],
+  animations: [
+    trigger('detailExpand', [
+      state('collapsed', style({height: '0px', minHeight: '0'})),
+      state('expanded', style({height: '*'})),
+      transition('expanded <=> collapsed', animate('225ms cubic-bezier(0.4, 0.0, 0.2, 1)')),
+    ]),
+  ],
 })
 export class AfipComponent implements OnInit {
 
-  constructor() { }
+  invoices: InvoiceElement[] = [];
+  displayedColumns: string[] = ['docName', 'docNumber'];
+  expandedElement: InvoiceElement | null | undefined;
+  @ViewChild(MatTable) table: MatTable<InvoiceElement> | undefined;
+
+  constructor(private barcodeScanner: BarcodeScanner) { }
 
   ngOnInit(): void {
+  }
+
+  scanQR() {
+    this.barcodeScanner.scan({formats: 'QR_CODE'})
+    .then(barcodeData => {
+      this.processQR(barcodeData.text);
+    }).catch(err => {
+      alert(err);
+    });
+  }
+
+  test() {
+    const urlText = "https://www.afip.gob.ar/fe/qr/?p=eyJ2ZXIiOjEsImZlY2hhIjoiMjAyMi0wMS0yNSIsImN1aXQiOjIwMzY3MzYyNDczLCJwdG9WdGEiOjIsInRpcG9DbXAiOjExLCJucm9DbXAiOjg4LCJpbXBvcnRlIjoyMDAwLCJtb25lZGEiOiJQRVMiLCJjdHoiOjEsInRpcG9Eb2NSZWMiOjgwLCJucm9Eb2NSZWMiOjMwNzE2NzQzMjk5LCJ0aXBvQ29kQXV0IjoiRSIsImNvZEF1dCI6NzIwNDMzMjQ5NjcwOTl9";
+    this.processQR(urlText);
+  }
+
+  processQR(t: string) {
+    const url = new URL(t);
+    const p: any = url.searchParams.get('p');
+    let encode = p.replace(/b\'(.*)\'/, '$1').replace(/\n/g, '');
+    const decode = decodeURIComponent(escape(atob( encode ))).replace(/\'/g, '"');
+    const obj = JSON.parse(decode);
+    if (url.host === 'www.afip.gob.ar' || url.host === 'afip.gob.ar') {
+      console.log(obj);
+      this.invoices.push(this.processQrFeAr(obj));
+      console.log(this.invoices);
+      if (this.table) {
+        this.table!.renderRows();
+      }
+    } else {
+      alert('El QR escaneado no es de AFIP');
+    }
+  }
+
+  processQrFeAr(obj: any): any {
+    if (obj.ver === '1' || obj.ver === 1) {
+      let comp = '';
+
+      switch (obj.tipoCmp) {
+        case 1:
+          comp = 'FA-A';
+          break;
+        case 2:
+          comp = 'ND-A';
+          break;
+        case 3:
+          comp = 'NC-A';
+          break;
+        case 4:
+          comp = 'RE-A';
+          break;
+        case 6:
+          comp = 'FA-B';
+          break;
+        case 7:
+          comp = 'ND-B';
+          break;
+        case 8:
+          comp = 'NC-B';
+          break;
+        case 9:
+          comp = 'RE-B';
+          break;
+        case 11:
+          comp = 'FA-C';
+          break;
+        case 12:
+          comp = 'ND-C';
+          break;
+        case 13:
+          comp = 'NC-C';
+          break;
+        case 15:
+          comp = 'RE-C';
+          break;
+        case 19:
+          comp = 'FA-E';
+          break;
+        case 51:
+          comp = 'FA-M';
+          break;
+        case 201:
+          comp = 'FCE-A';
+          break;
+        case 206:
+          comp = 'FCE-B';
+          break;
+        case 211:
+          comp = 'FCE-C';
+          break;
+        default:
+          comp = '-';
+          break;
+      }
+
+      let pdv = obj.ptoVta.toLocaleString('es-AR', {
+        minimumIntegerDigits: 5,
+        useGrouping: false
+      })
+
+      let num = obj.nroCmp.toLocaleString('es-AR', {
+        minimumIntegerDigits: 8,
+        useGrouping: false
+      })
+
+      return {
+        docName: comp,
+        docNumber: pdv + '-' + num,
+        cuit: obj.cuit,
+        date: obj.fecha,
+        amount: obj.importe,
+        currency: obj.moneda
+      };
+    }
+  }
+
+  exportToCSV(): void {
+    let csvContent = 'data:text/csv;charset=utf-8,';
+    csvContent += 'Tipo,Nro,CUIT,Fecha,Importe,Moneda\r\n';
+
+    this.invoices.forEach((row) => {
+      console.log(row);
+      csvContent += row.docName + ',' + row.docNumber + ',' + row.cuit + ',' + row.date + ',' + row.amount + ',' + row.currency + '\r\n';
+    });
+
+    let date = new Date()
+    let day = `${(date.getDate())}`.padStart(2,'0');
+    let month = `${(date.getMonth()+1)}`.padStart(2,'0');
+    let year = date.getFullYear();
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', 'invoices_afip_' + `${day}${month}${year}` + '.csv');
+    document.body.appendChild(link);
+    link.click();
   }
 
 }
