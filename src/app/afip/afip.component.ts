@@ -6,7 +6,8 @@ import { BarcodeScanner } from '@awesome-cordova-plugins/barcode-scanner/ngx';
 export interface InvoiceElement {
   docName: string;
   docNumber: string;
-  cuit: string;
+  cuitEmi: string;
+  cuitRec: string;
   date: string;
   amount: number;
   currency: string;
@@ -46,7 +47,10 @@ export class AfipComponent implements OnInit {
   }
 
   test() {
-    const urlText = "https://www.afip.gob.ar/fe/qr/?p=eyJ2ZXIiOjEsImZlY2hhIjoiMjAyMi0wMS0yNSIsImN1aXQiOjIwMzY3MzYyNDczLCJwdG9WdGEiOjIsInRpcG9DbXAiOjExLCJucm9DbXAiOjg4LCJpbXBvcnRlIjoyMDAwLCJtb25lZGEiOiJQRVMiLCJjdHoiOjEsInRpcG9Eb2NSZWMiOjgwLCJucm9Eb2NSZWMiOjMwNzE2NzQzMjk5LCJ0aXBvQ29kQXV0IjoiRSIsImNvZEF1dCI6NzIwNDMzMjQ5NjcwOTl9";
+    // FA-C
+    // const urlText = "https://www.afip.gob.ar/fe/qr/?p=eyJ2ZXIiOjEsImZlY2hhIjoiMjAyMi0wMS0yNSIsImN1aXQiOjIwMzY3MzYyNDczLCJwdG9WdGEiOjIsInRpcG9DbXAiOjExLCJucm9DbXAiOjg4LCJpbXBvcnRlIjoyMDAwLCJtb25lZGEiOiJQRVMiLCJjdHoiOjEsInRpcG9Eb2NSZWMiOjgwLCJucm9Eb2NSZWMiOjMwNzE2NzQzMjk5LCJ0aXBvQ29kQXV0IjoiRSIsImNvZEF1dCI6NzIwNDMzMjQ5NjcwOTl9";
+    // FA-A
+    const urlText = "https://www.afip.gob.ar/fe/qr/?p=eyJ2ZXIiOiAxLCAiZmVjaGEiOiAiMjAyMi0wMi0wMSIsICJjdWl0IjogMzA3MTY3MTg1MjksICJwdG9WdGEiOiAyLCAidGlwb0NtcCI6IDEsICJucm9DbXAiOiAxNjcsICJpbXBvcnRlIjogMTgxNTAuMCwgIm1vbmVkYSI6ICJQRVMiLCAiY3R6IjogMS4wLCAidGlwb0NvZEF1dCI6ICJFIiwgImNvZEF1dCI6IDcyMDU5MDA0NTQ5NTc1LCAibnJvRG9jUmVjIjogMjAzNzAzODYwNTcsICJ0aXBvRG9jUmVjIjogODB9";
     this.processQR(urlText);
   }
 
@@ -56,8 +60,8 @@ export class AfipComponent implements OnInit {
     let encode = p.replace(/b\'(.*)\'/, '$1').replace(/\n/g, '');
     const decode = decodeURIComponent(escape(atob( encode ))).replace(/\'/g, '"');
     const obj = JSON.parse(decode);
+    console.log(obj);
     if (url.host === 'www.afip.gob.ar' || url.host === 'afip.gob.ar') {
-      console.log(obj);
       this.invoices.push(this.processQrFeAr(obj));
       console.log(this.invoices);
       if (this.table) {
@@ -129,20 +133,14 @@ export class AfipComponent implements OnInit {
           break;
       }
 
-      let pdv = obj.ptoVta.toLocaleString('es-AR', {
-        minimumIntegerDigits: 5,
-        useGrouping: false
-      })
-
-      let num = obj.nroCmp.toLocaleString('es-AR', {
-        minimumIntegerDigits: 8,
-        useGrouping: false
-      })
+      let pdv = obj.ptoVta.toLocaleString('es-AR', {minimumIntegerDigits: 5,useGrouping: false});
+      let num = obj.nroCmp.toLocaleString('es-AR', {minimumIntegerDigits: 8,useGrouping: false});
 
       return {
         docName: comp,
         docNumber: pdv + '-' + num,
-        cuit: obj.cuit,
+        cuitEmi: obj.cuit,
+        cuitRec: obj.nroDocRec,
         date: obj.fecha,
         amount: obj.importe,
         currency: obj.moneda
@@ -152,11 +150,10 @@ export class AfipComponent implements OnInit {
 
   exportToCSV(): void {
     let csvContent = 'data:text/csv;charset=utf-8,';
-    csvContent += 'Tipo,Nro,CUIT,Fecha,Importe,Moneda\r\n';
+    csvContent += 'Tipo,Nro,Emisor,Receptor,Fecha,Importe,Moneda\r\n';
 
     this.invoices.forEach((row) => {
-      console.log(row);
-      csvContent += row.docName + ',' + row.docNumber + ',' + row.cuit + ',' + row.date + ',' + row.amount + ',' + row.currency + '\r\n';
+      csvContent += row.docName + ',' + row.docNumber + ',' + row.cuitEmi + ',' + row.cuitRec + ',' + row.date + ',' + row.amount + ',' + row.currency + '\r\n';
     });
 
     let date = new Date()

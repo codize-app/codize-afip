@@ -29,12 +29,13 @@
                        [@detailExpand]="element == expandedElement ? 'expanded' : 'collapsed'">
                     <div class="p-1 w-50 border-end">
                         <span class="badge bg-secondary mb-1">{{element.date | date:'dd/MM/yyyy'}}</span><br />
-                        <h3 class="mb-1">{{element.amount | currency:'ARS':'symbol':'':'es-AR'}}</h3>
+                        <h3 class="mb-0">{{element.amount | currency:'ARS':'symbol':'':'es-AR'}}</h3>
                         <small><b>Moneda:</b> {{element.currency}}</small>
                     </div>
                     <div class="p-1 w-50">
                         <h5 class="mb-1">{{element.docName}} {{element.docNumber}}</h5>
-                        <span><b>CUIT:</b> {{element.cuit}}</span>
+                        <h5 class="mb-1"><b>Emisor:</b> {{element.cuitEmi}}</h5>
+                        <h5 class="mb-1"><b>Receptor:</b> {{element.cuitRec}}</h5>
                     </div>
                   </div>
                 </td>
