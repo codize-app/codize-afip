@@ -20,6 +20,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatDialogModule } from '@angular/material/dialog';
 
 import { AfipComponent } from './afip/afip.component';
+import { DialogContent } from './afip/afip.component';
 
 const routes: Routes = [
   { path: 'home', component: AfipComponent },
@@ -32,7 +33,8 @@ const routes: Routes = [
 @NgModule({
   declarations: [
     AppComponent,
-    AfipComponent
+    AfipComponent,
+    DialogContent
   ],
   imports: [
     BrowserModule,

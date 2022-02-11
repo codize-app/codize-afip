@@ -1,6 +1,7 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, Inject } from '@angular/core';
 import {animate, state, style, transition, trigger} from '@angular/animations';
 import { MatTable } from '@angular/material/table';
+import { MatDialog, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { BarcodeScanner } from '@awesome-cordova-plugins/barcode-scanner/ngx';
 
 export interface InvoiceElement {
@@ -32,7 +33,7 @@ export class AfipComponent implements OnInit {
   expandedElement: InvoiceElement | null | undefined;
   @ViewChild(MatTable) table: MatTable<InvoiceElement> | undefined;
 
-  constructor(private barcodeScanner: BarcodeScanner) { }
+  constructor(private barcodeScanner: BarcodeScanner, public dialog: MatDialog) { }
 
   ngOnInit(): void {
     let inv = localStorage.getItem('invoices');
@@ -80,7 +81,7 @@ export class AfipComponent implements OnInit {
         this.table!.renderRows();
       }
     } else {
-      alert('El QR escaneado no es de AFIP');
+      this.openDialog('El QR escaneado no es de AFIP');
     }
   }
 
@@ -181,4 +182,20 @@ export class AfipComponent implements OnInit {
     link.click();
   }
 
+  openDialog(msg: string) {
+    const dialogRef = this.dialog.open(DialogContent, {
+      data: msg,
+    });
+
+    dialogRef.afterClosed().subscribe(result => {});
+  }
+
+}
+
+@Component({
+  selector: 'dialog-data',
+  templateUrl: './dialog.html',
+})
+export class DialogContent {
+  constructor(@Inject(MAT_DIALOG_DATA) public data: string) {}
 }
