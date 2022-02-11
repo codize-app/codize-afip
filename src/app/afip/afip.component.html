@@ -12,7 +12,7 @@
     </div>
 </div>
 
-<!--button mat-raised-button color="primary" class="w-100" (click)="test()">TEST</button-->
+<button mat-raised-button color="primary" class="w-100" (click)="test()">TEST</button>
 
 <div *ngIf="invoices.length > 0" class="row">
     <div class="col-12">
@@ -39,8 +39,8 @@
                     </div>
                     <div class="p-1 w-50">
                         <h5 class="mb-1">{{element.docName}} {{element.docNumber}}</h5>
-                        <h5 class="mb-1"><b>Emisor:</b> {{element.cuitEmi}}</h5>
-                        <h5 class="mb-1"><b>Receptor:</b> {{element.cuitRec}}</h5>
+                        <h5 class="mb-1"><b>Emisor:</b> {{element.nameEmi}}</h5>
+                        <h5 class="mb-1"><b>Receptor:</b> {{element.nameRec}}</h5>
                     </div>
                   </div>
                 </td>

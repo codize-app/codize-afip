@@ -3,12 +3,15 @@ import {animate, state, style, transition, trigger} from '@angular/animations';
 import { MatTable } from '@angular/material/table';
 import { MatDialog, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { BarcodeScanner } from '@awesome-cordova-plugins/barcode-scanner/ngx';
+import { HttpClient } from '@angular/common/http';
 
 export interface InvoiceElement {
   docName: string;
   docNumber: string;
   cuitEmi: string;
   cuitRec: string;
+  nameEmi: string;
+  nameRec: string;
   date: string;
   amount: number;
   currency: string;
@@ -33,7 +36,7 @@ export class AfipComponent implements OnInit {
   expandedElement: InvoiceElement | null | undefined;
   @ViewChild(MatTable) table: MatTable<InvoiceElement> | undefined;
 
-  constructor(private barcodeScanner: BarcodeScanner, public dialog: MatDialog) { }
+  constructor(private barcodeScanner: BarcodeScanner, public dialog: MatDialog, private http: HttpClient) { }
 
   ngOnInit(): void {
     let inv = localStorage.getItem('invoices');
@@ -66,7 +69,7 @@ export class AfipComponent implements OnInit {
     localStorage.setItem('invoices', JSON.stringify(this.invoices));
   }
 
-  processQR(t: string) {
+  async processQR(t: string) {
     const url = new URL(t);
     const p: any = url.searchParams.get('p');
     let encode = p.replace(/b\'(.*)\'/, '$1').replace(/\n/g, '');
@@ -74,12 +77,26 @@ export class AfipComponent implements OnInit {
     const obj = JSON.parse(decode);
     console.log(obj);
     if (url.host === 'www.afip.gob.ar' || url.host === 'afip.gob.ar') {
-      this.invoices.push(this.processQrFeAr(obj));
-      localStorage.setItem('invoices', JSON.stringify(this.invoices));
-      console.log(this.invoices);
-      if (this.table) {
-        this.table!.renderRows();
-      }
+      let newinvoice = await this.processQrFeAr(obj);
+      this.http.get<any>('https://afip.tangofactura.com/Rest/GetContribuyenteFull?cuit=' + obj.cuit,{}).subscribe(dataE => {
+        if (dataE.Contribuyente) {
+          newinvoice.nameEmi = dataE.Contribuyente.nombre;
+          this.http.get<any>('https://afip.tangofactura.com/Rest/GetContribuyenteFull?cuit=' + obj.nroDocRec,{}).subscribe(dataR => {
+          if (dataR.Contribuyente) {
+            newinvoice.nameRec = dataR.Contribuyente.nombre;
+            this.invoices.push(newinvoice);
+            localStorage.setItem('invoices', JSON.stringify(this.invoices));
+            if (this.table) {
+              this.table!.renderRows();
+            }
+          }
+        }, (err: any) => {
+          this.openDialog(err);
+        });
+        }
+      }, (err: any) => {
+        this.openDialog(err);
+      })
     } else {
       this.openDialog('El QR escaneado no es de AFIP');
     }
@@ -148,12 +165,16 @@ export class AfipComponent implements OnInit {
 
       let pdv = obj.ptoVta.toLocaleString('es-AR', {minimumIntegerDigits: 5,useGrouping: false});
       let num = obj.nroCmp.toLocaleString('es-AR', {minimumIntegerDigits: 8,useGrouping: false});
+      let nameEmi = '';
+      let nameRec = '';
 
       return {
         docName: comp,
         docNumber: pdv + '-' + num,
         cuitEmi: obj.cuit,
         cuitRec: obj.nroDocRec,
+        nameEmi: '',
+        nameRec: '',
         date: obj.fecha,
         amount: obj.importe,
         currency: obj.moneda
@@ -163,10 +184,10 @@ export class AfipComponent implements OnInit {
 
   exportToCSV(): void {
     let csvContent = 'data:text/csv;charset=utf-8,';
-    csvContent += 'Tipo,Nro,Emisor,Receptor,Fecha,Importe,Moneda\r\n';
+    csvContent += 'Tipo,Nro,Emisor,Emisor CUIT,Receptor,Receptor CUIT,Fecha,Importe,Importe sin IVA 21,Moneda\r\n';
 
     this.invoices.forEach((row) => {
-      csvContent += row.docName + ',' + row.docNumber + ',' + row.cuitEmi + ',' + row.cuitRec + ',' + row.date + ',' + row.amount + ',' + row.currency + '\r\n';
+      csvContent += row.docName + ',' + row.docNumber + ',' + row.nameEmi + ',' + row.cuitEmi + ',' + row.nameRec + ',' + row.cuitRec + ',' + row.date + ',' + row.amount + ',' + Number(row.amount) / 1.21 + ',' + row.currency + '\r\n';
     });
 
     let date = new Date()
@@ -177,7 +198,7 @@ export class AfipComponent implements OnInit {
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', 'invoices_afip_' + `${day}${month}${year}` + '.csv');
+    link.setAttribute('download', 'invoices_afip_' + `${year}${month}${day}` + '.csv');
     document.body.appendChild(link);
     link.click();
   }
