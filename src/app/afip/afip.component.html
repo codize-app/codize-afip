@@ -1,6 +1,11 @@
 <div class="row mb-2">
-    <div class="col-6">
+    <div class="col-12">
         <button mat-raised-button color="primary" class="w-100" (click)="scanQR()">Escanear QR</button>
+    </div>
+</div>
+<div class="row mb-2">
+    <div class="col-6">
+        <button mat-raised-button color="warn" class="w-100" (click)="removeInvoices()" [disabled]="invoices.length == 0">Eliminar Facturas</button>
     </div>
     <div class="col-6">
         <button mat-raised-button color="accent" class="w-100" (click)="exportToCSV()" [disabled]="invoices.length == 0">Exportar</button>

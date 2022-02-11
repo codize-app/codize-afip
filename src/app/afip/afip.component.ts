@@ -35,6 +35,12 @@ export class AfipComponent implements OnInit {
   constructor(private barcodeScanner: BarcodeScanner) { }
 
   ngOnInit(): void {
+    let inv = localStorage.getItem('invoices');
+    if (inv) {
+      if (JSON.parse(inv).length > 0) {
+        this.invoices = JSON.parse(inv);
+      }
+    }
   }
 
   scanQR() {
@@ -54,6 +60,11 @@ export class AfipComponent implements OnInit {
     this.processQR(urlText);
   }
 
+  removeInvoices(): void {
+    this.invoices.length = 0;
+    localStorage.setItem('invoices', JSON.stringify(this.invoices));
+  }
+
   processQR(t: string) {
     const url = new URL(t);
     const p: any = url.searchParams.get('p');
@@ -63,6 +74,7 @@ export class AfipComponent implements OnInit {
     console.log(obj);
     if (url.host === 'www.afip.gob.ar' || url.host === 'afip.gob.ar') {
       this.invoices.push(this.processQrFeAr(obj));
+      localStorage.setItem('invoices', JSON.stringify(this.invoices));
       console.log(this.invoices);
       if (this.table) {
         this.table!.renderRows();

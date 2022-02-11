@@ -16,6 +16,9 @@ import { BarcodeScanner } from '@awesome-cordova-plugins/barcode-scanner/ngx';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTableModule } from '@angular/material/table';
+import { MatIconModule } from '@angular/material/icon';
+import { MatDialogModule } from '@angular/material/dialog';
+
 import { AfipComponent } from './afip/afip.component';
 
 const routes: Routes = [
@@ -37,7 +40,9 @@ const routes: Routes = [
     RouterModule.forRoot(routes),
     MatToolbarModule,
     MatButtonModule,
-    MatTableModule
+    MatTableModule,
+    MatIconModule,
+    MatDialogModule
   ],
   providers: [BarcodeScanner],
   bootstrap: [AppComponent]
