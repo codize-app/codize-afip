@@ -5,6 +5,11 @@ import { MatDialog, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { BarcodeScanner } from '@awesome-cordova-plugins/barcode-scanner/ngx';
 import { HttpClient } from '@angular/common/http';
 
+import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
+import { FileOpener } from '@ionic-native/file-opener/ngx';
+
+import * as XLSX from 'xlsx';
+
 export interface InvoiceElement {
   docName: string;
   docNumber: string;
@@ -182,8 +187,8 @@ export class AfipComponent implements OnInit {
     }
   }
 
-  exportToCSV(): void {
-    let csvContent = 'data:text/csv;charset=utf-8,';
+  async exportToCSV() {
+    let csvContent = '';
     csvContent += 'Tipo,Nro,Emisor,Emisor CUIT,Receptor,Receptor CUIT,Fecha,Importe,Importe sin IVA 21,Moneda\r\n';
 
     this.invoices.forEach((row) => {
@@ -195,12 +200,12 @@ export class AfipComponent implements OnInit {
     let month = `${(date.getMonth()+1)}`.padStart(2,'0');
     let year = date.getFullYear();
 
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', 'invoices_afip_' + `${year}${month}${day}` + '.csv');
-    document.body.appendChild(link);
-    link.click();
+    const result = await Filesystem.writeFile({
+      path: 'invoices_afip_' + `${year}${month}${day}` + '.csv',
+      data: csvContent,
+      directory: Directory.Documents,
+      encoding: Encoding.UTF8,
+    });
   }
 
   openDialog(msg: string) {

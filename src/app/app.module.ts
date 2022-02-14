@@ -13,6 +13,7 @@ import { AppComponent } from './app.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 import { BarcodeScanner } from '@awesome-cordova-plugins/barcode-scanner/ngx';
+import { FileOpener } from '@ionic-native/file-opener/ngx';
 
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
@@ -48,7 +49,7 @@ const routes: Routes = [
     MatIconModule,
     MatDialogModule
   ],
-  providers: [BarcodeScanner],
+  providers: [BarcodeScanner, FileOpener],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
