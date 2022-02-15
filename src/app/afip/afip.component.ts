@@ -41,6 +41,8 @@ export class AfipComponent implements OnInit {
   expandedElement: InvoiceElement | null | undefined;
   @ViewChild(MatTable) table: MatTable<InvoiceElement> | undefined;
 
+  loading = false;
+
   constructor(private barcodeScanner: BarcodeScanner, public dialog: MatDialog, private http: HttpClient) { }
 
   ngOnInit(): void {
@@ -75,6 +77,7 @@ export class AfipComponent implements OnInit {
   }
 
   async processQR(t: string) {
+    this.loading = true;
     const url = new URL(t);
     const p: any = url.searchParams.get('p');
     let encode = p.replace(/b\'(.*)\'/, '$1').replace(/\n/g, '');
@@ -91,15 +94,18 @@ export class AfipComponent implements OnInit {
             newinvoice.nameRec = dataR.Contribuyente.nombre;
             this.invoices.push(newinvoice);
             localStorage.setItem('invoices', JSON.stringify(this.invoices));
+            this.loading = false;
             if (this.table) {
               this.table!.renderRows();
             }
           }
         }, (err: any) => {
+          this.loading = false;
           this.openDialog(err);
         });
         }
       }, (err: any) => {
+        this.loading = false;
         this.openDialog(err);
       })
     } else {
