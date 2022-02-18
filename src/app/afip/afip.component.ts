@@ -65,7 +65,9 @@ export class AfipComponent implements OnInit {
     // FA-C
     // const urlText = "https://www.afip.gob.ar/fe/qr/?p=eyJ2ZXIiOjEsImZlY2hhIjoiMjAyMi0wMS0yNSIsImN1aXQiOjIwMzY3MzYyNDczLCJwdG9WdGEiOjIsInRpcG9DbXAiOjExLCJucm9DbXAiOjg4LCJpbXBvcnRlIjoyMDAwLCJtb25lZGEiOiJQRVMiLCJjdHoiOjEsInRpcG9Eb2NSZWMiOjgwLCJucm9Eb2NSZWMiOjMwNzE2NzQzMjk5LCJ0aXBvQ29kQXV0IjoiRSIsImNvZEF1dCI6NzIwNDMzMjQ5NjcwOTl9";
     // FA-A
-    const urlText = "https://www.afip.gob.ar/fe/qr/?p=eyJ2ZXIiOiAxLCAiZmVjaGEiOiAiMjAyMi0wMi0wMSIsICJjdWl0IjogMzA3MTY3MTg1MjksICJwdG9WdGEiOiAyLCAidGlwb0NtcCI6IDEsICJucm9DbXAiOiAxNjcsICJpbXBvcnRlIjogMTgxNTAuMCwgIm1vbmVkYSI6ICJQRVMiLCAiY3R6IjogMS4wLCAidGlwb0NvZEF1dCI6ICJFIiwgImNvZEF1dCI6IDcyMDU5MDA0NTQ5NTc1LCAibnJvRG9jUmVjIjogMjAzNzAzODYwNTcsICJ0aXBvRG9jUmVjIjogODB9";
+    // const urlText = "https://www.afip.gob.ar/fe/qr/?p=eyJ2ZXIiOiAxLCAiZmVjaGEiOiAiMjAyMi0wMi0wMSIsICJjdWl0IjogMzA3MTY3MTg1MjksICJwdG9WdGEiOiAyLCAidGlwb0NtcCI6IDEsICJucm9DbXAiOiAxNjcsICJpbXBvcnRlIjogMTgxNTAuMCwgIm1vbmVkYSI6ICJQRVMiLCAiY3R6IjogMS4wLCAidGlwb0NvZEF1dCI6ICJFIiwgImNvZEF1dCI6IDcyMDU5MDA0NTQ5NTc1LCAibnJvRG9jUmVjIjogMjAzNzAzODYwNTcsICJ0aXBvRG9jUmVjIjogODB9";
+    // FA-B
+    const urlText = "https://www.afip.gob.ar/fe/qr/?p=eyJjb2RBdXQiOjcyMDQ2MTkwMDUyNDc3LCJjdHoiOjEsImN1aXQiOjMwNzEwMTE0MTc2LCJmZWNoYSI6IjIwMjItMDEtMjMiLCJpbXBvcnRlIjo2Mzk4LjAwLCJtb25lZGEiOiJQRVMiLCJucm9DbXAiOjEwMDk3OTksIm5yb0RvY1JlYyI6MCwicHRvVnRhIjozMSwidGlwb0NtcCI6NiwidGlwb0NvZEF1dCI6IkUiLCJ0aXBvRG9jUmVjIjo5NiwidmVyIjoxfQ=="
     this.processQR(urlText);
   }
 
@@ -87,9 +89,23 @@ export class AfipComponent implements OnInit {
       this.http.get<any>('https://afip.tangofactura.com/Rest/GetContribuyenteFull?cuit=' + obj.cuit,{}).subscribe(dataE => {
         if (dataE.Contribuyente) {
           newinvoice.nameEmi = dataE.Contribuyente.nombre;
-          this.http.get<any>('https://afip.tangofactura.com/Rest/GetContribuyenteFull?cuit=' + obj.nroDocRec,{}).subscribe(dataR => {
-          if (dataR.Contribuyente) {
-            newinvoice.nameRec = dataR.Contribuyente.nombre;
+          if (obj.nroDocRec !== 0) {
+            this.http.get<any>('https://afip.tangofactura.com/Rest/GetContribuyenteFull?cuit=' + obj.nroDocRec,{}).subscribe(dataR => {
+              if (dataR.Contribuyente) {
+                newinvoice.nameRec = dataR.Contribuyente.nombre;
+                this.invoices.push(newinvoice);
+                localStorage.setItem('invoices', JSON.stringify(this.invoices));
+                this.loading = false;
+                if (this.table) {
+                  this.table!.renderRows();
+                }
+              }
+            }, (err: any) => {
+              this.loading = false;
+              this.openDialog(err);
+            });
+          } else {
+            newinvoice.nameRec = 'Consumidor Final';
             this.invoices.push(newinvoice);
             localStorage.setItem('invoices', JSON.stringify(this.invoices));
             this.loading = false;
@@ -97,10 +113,6 @@ export class AfipComponent implements OnInit {
               this.table!.renderRows();
             }
           }
-        }, (err: any) => {
-          this.loading = false;
-          this.openDialog(err);
-        });
         }
       }, (err: any) => {
         this.loading = false;
