@@ -8,8 +8,6 @@ import { HttpClient } from '@angular/common/http';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { FileOpener } from '@ionic-native/file-opener/ngx';
 
-import * as XLSX from 'xlsx';
-
 export interface InvoiceElement {
   docName: string;
   docNumber: string;
@@ -206,12 +204,36 @@ export class AfipComponent implements OnInit {
     let month = `${(date.getMonth()+1)}`.padStart(2,'0');
     let year = date.getFullYear();
 
-    const result = await Filesystem.writeFile({
+    // Method for save in Documents only
+    /*const result = await Filesystem.writeFile({
       path: 'invoices_afip_' + `${year}${month}${day}` + '.csv',
       data: csvContent,
       directory: Directory.Documents,
       encoding: Encoding.UTF8,
-    });
+    });*/
+
+    // Save and Open the file with Data (better option in android actually)
+    const blob = new Blob([csvContent], { type: "text/csv" });
+    var reader = new FileReader();
+    reader.readAsDataURL(blob);
+    reader.onloadend = async function () {
+        var base64data = reader.result;
+        try {
+            const result = await Filesystem.writeFile({
+                path: 'invoices_afip_' + `${year}${month}${day}` + '.csv',
+                data: <string>base64data,
+                directory: Directory.Data,
+                recursive: true
+            });
+            let fileOpener: FileOpener = new FileOpener();
+            fileOpener.open(result.uri, blob.type)
+                .then(() => console.log('File open'))
+                .catch(e => console.log('Error to open file', e));
+            console.log('File write', result.uri);
+        } catch (e) {
+            console.error('Error to write file', e);
+        }
+    }
   }
 
   openDialog(msg: string) {
