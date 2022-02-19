@@ -11,6 +11,7 @@ import { FileOpener } from '@ionic-native/file-opener/ngx';
 export interface InvoiceElement {
   docName: string;
   docNumber: string;
+  cae: string;
   cuitEmi: string;
   cuitRec: string;
   nameEmi: string;
@@ -63,11 +64,11 @@ export class AfipComponent implements OnInit {
 
   test() {
     // FA-C
-    // const urlText = "https://www.afip.gob.ar/fe/qr/?p=eyJ2ZXIiOjEsImZlY2hhIjoiMjAyMi0wMS0yNSIsImN1aXQiOjIwMzY3MzYyNDczLCJwdG9WdGEiOjIsInRpcG9DbXAiOjExLCJucm9DbXAiOjg4LCJpbXBvcnRlIjoyMDAwLCJtb25lZGEiOiJQRVMiLCJjdHoiOjEsInRpcG9Eb2NSZWMiOjgwLCJucm9Eb2NSZWMiOjMwNzE2NzQzMjk5LCJ0aXBvQ29kQXV0IjoiRSIsImNvZEF1dCI6NzIwNDMzMjQ5NjcwOTl9";
+    const urlText = "https://www.afip.gob.ar/fe/qr/?p=eyJ2ZXIiOjEsImZlY2hhIjoiMjAyMi0wMS0yNSIsImN1aXQiOjIwMzY3MzYyNDczLCJwdG9WdGEiOjIsInRpcG9DbXAiOjExLCJucm9DbXAiOjg4LCJpbXBvcnRlIjoyMDAwLCJtb25lZGEiOiJQRVMiLCJjdHoiOjEsInRpcG9Eb2NSZWMiOjgwLCJucm9Eb2NSZWMiOjMwNzE2NzQzMjk5LCJ0aXBvQ29kQXV0IjoiRSIsImNvZEF1dCI6NzIwNDMzMjQ5NjcwOTl9";
     // FA-A
     // const urlText = "https://www.afip.gob.ar/fe/qr/?p=eyJ2ZXIiOiAxLCAiZmVjaGEiOiAiMjAyMi0wMi0wMSIsICJjdWl0IjogMzA3MTY3MTg1MjksICJwdG9WdGEiOiAyLCAidGlwb0NtcCI6IDEsICJucm9DbXAiOiAxNjcsICJpbXBvcnRlIjogMTgxNTAuMCwgIm1vbmVkYSI6ICJQRVMiLCAiY3R6IjogMS4wLCAidGlwb0NvZEF1dCI6ICJFIiwgImNvZEF1dCI6IDcyMDU5MDA0NTQ5NTc1LCAibnJvRG9jUmVjIjogMjAzNzAzODYwNTcsICJ0aXBvRG9jUmVjIjogODB9";
     // FA-B
-    const urlText = "https://www.afip.gob.ar/fe/qr/?p=eyJjb2RBdXQiOjcyMDQ2MTkwMDUyNDc3LCJjdHoiOjEsImN1aXQiOjMwNzEwMTE0MTc2LCJmZWNoYSI6IjIwMjItMDEtMjMiLCJpbXBvcnRlIjo2Mzk4LjAwLCJtb25lZGEiOiJQRVMiLCJucm9DbXAiOjEwMDk3OTksIm5yb0RvY1JlYyI6MCwicHRvVnRhIjozMSwidGlwb0NtcCI6NiwidGlwb0NvZEF1dCI6IkUiLCJ0aXBvRG9jUmVjIjo5NiwidmVyIjoxfQ=="
+    // const urlText = "https://www.afip.gob.ar/fe/qr/?p=eyJjb2RBdXQiOjcyMDQ2MTkwMDUyNDc3LCJjdHoiOjEsImN1aXQiOjMwNzEwMTE0MTc2LCJmZWNoYSI6IjIwMjItMDEtMjMiLCJpbXBvcnRlIjo2Mzk4LjAwLCJtb25lZGEiOiJQRVMiLCJucm9DbXAiOjEwMDk3OTksIm5yb0RvY1JlYyI6MCwicHRvVnRhIjozMSwidGlwb0NtcCI6NiwidGlwb0NvZEF1dCI6IkUiLCJ0aXBvRG9jUmVjIjo5NiwidmVyIjoxfQ=="
     this.processQR(urlText);
   }
 
@@ -85,39 +86,44 @@ export class AfipComponent implements OnInit {
     const obj = JSON.parse(decode);
     console.log(obj);
     if (url.host === 'www.afip.gob.ar' || url.host === 'afip.gob.ar') {
-      let newinvoice = await this.processQrFeAr(obj);
-      this.http.get<any>('https://afip.tangofactura.com/Rest/GetContribuyenteFull?cuit=' + obj.cuit,{}).subscribe(dataE => {
-        if (dataE.Contribuyente) {
-          newinvoice.nameEmi = dataE.Contribuyente.nombre;
-          if (obj.nroDocRec !== 0) {
-            this.http.get<any>('https://afip.tangofactura.com/Rest/GetContribuyenteFull?cuit=' + obj.nroDocRec,{}).subscribe(dataR => {
-              if (dataR.Contribuyente) {
-                newinvoice.nameRec = dataR.Contribuyente.nombre;
-                this.invoices.push(newinvoice);
-                localStorage.setItem('invoices', JSON.stringify(this.invoices));
-                this.loading = false;
-                if (this.table) {
-                  this.table!.renderRows();
+      if (this.invoices.find(x => x.cae === obj.codAut) !== undefined) {
+        this.loading = false;
+        this.openDialog('¡Factura ya escaneada!');
+      } else {
+        let newinvoice = await this.processQrFeAr(obj);
+        this.http.get<any>('https://afip.tangofactura.com/Rest/GetContribuyenteFull?cuit=' + obj.cuit,{}).subscribe(dataE => {
+          if (dataE.Contribuyente) {
+            newinvoice.nameEmi = dataE.Contribuyente.nombre;
+            if (obj.nroDocRec !== 0) {
+              this.http.get<any>('https://afip.tangofactura.com/Rest/GetContribuyenteFull?cuit=' + obj.nroDocRec,{}).subscribe(dataR => {
+                if (dataR.Contribuyente) {
+                  newinvoice.nameRec = dataR.Contribuyente.nombre;
+                  this.invoices.push(newinvoice);
+                  localStorage.setItem('invoices', JSON.stringify(this.invoices));
+                  this.loading = false;
+                  if (this.table) {
+                    this.table!.renderRows();
+                  }
                 }
-              }
-            }, (err: any) => {
+              }, (err: any) => {
+                this.loading = false;
+                this.openDialog(err);
+              });
+            } else {
+              newinvoice.nameRec = 'Consumidor Final';
+              this.invoices.push(newinvoice);
+              localStorage.setItem('invoices', JSON.stringify(this.invoices));
               this.loading = false;
-              this.openDialog(err);
-            });
-          } else {
-            newinvoice.nameRec = 'Consumidor Final';
-            this.invoices.push(newinvoice);
-            localStorage.setItem('invoices', JSON.stringify(this.invoices));
-            this.loading = false;
-            if (this.table) {
-              this.table!.renderRows();
+              if (this.table) {
+                this.table!.renderRows();
+              }
             }
           }
-        }
-      }, (err: any) => {
-        this.loading = false;
-        this.openDialog(err);
-      })
+        }, (err: any) => {
+          this.loading = false;
+          this.openDialog(err);
+        });
+      }
     } else {
       this.openDialog('El QR escaneado no es de AFIP');
     }
@@ -192,6 +198,7 @@ export class AfipComponent implements OnInit {
       return {
         docName: comp,
         docNumber: pdv + '-' + num,
+        cae: obj.codAut,
         cuitEmi: obj.cuit,
         cuitRec: obj.nroDocRec,
         nameEmi: '',
@@ -205,10 +212,10 @@ export class AfipComponent implements OnInit {
 
   async exportToCSV() {
     let csvContent = '';
-    csvContent += 'Tipo,Nro,Emisor,Emisor CUIT,Receptor,Receptor CUIT,Fecha,Importe,Importe sin IVA 21,Moneda\r\n';
+    csvContent += 'Tipo,Nro,CAE,Emisor,Emisor CUIT,Receptor,Receptor CUIT,Fecha,Importe,Importe sin IVA 21,Moneda\r\n';
 
     this.invoices.forEach((row) => {
-      csvContent += row.docName + ',' + row.docNumber + ',' + row.nameEmi + ',' + row.cuitEmi + ',' + row.nameRec + ',' + row.cuitRec + ',' + row.date + ',' + row.amount + ',' + Number(row.amount) / 1.21 + ',' + row.currency + '\r\n';
+      csvContent += row.docName + ',' + row.docNumber + ',' + row.cae + ',' + row.nameEmi + ',' + row.cuitEmi + ',' + row.nameRec + ',' + row.cuitRec + ',' + row.date + ',' + row.amount + ',' + Number(row.amount) / 1.21 + ',' + row.currency + '\r\n';
     });
 
     let date = new Date()
