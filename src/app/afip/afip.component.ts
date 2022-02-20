@@ -212,11 +212,18 @@ export class AfipComponent implements OnInit {
 
   async exportToCSV() {
     let csvContent = '';
+    let amount = 0;
+    let amount_iva = 0;
+
     csvContent += 'Tipo,Nro,CAE,Emisor,Emisor CUIT,Receptor,Receptor CUIT,Fecha,Importe,Importe sin IVA 21,Moneda\r\n';
 
     this.invoices.forEach((row) => {
       csvContent += row.docName + ',' + row.docNumber + ',' + row.cae + ',' + row.nameEmi + ',' + row.cuitEmi + ',' + row.nameRec + ',' + row.cuitRec + ',' + row.date + ',' + row.amount + ',' + Number(row.amount) / 1.21 + ',' + row.currency + '\r\n';
+      amount = amount + Number(row.amount);
+      amount_iva = amount_iva + (Number(row.amount) / 1.21);
     });
+
+    csvContent += ',,,,,,,,' + amount + ',' + amount_iva + ',\r\n';
 
     let date = new Date()
     let day = `${(date.getDate())}`.padStart(2,'0');
