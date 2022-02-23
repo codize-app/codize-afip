@@ -8,6 +8,8 @@ import { HttpClient } from '@angular/common/http';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { FileOpener } from '@ionic-native/file-opener/ngx';
 
+import * as XLSX from 'xlsx-js-style';
+
 export interface InvoiceElement {
   docName: string;
   docNumber: string;
@@ -260,6 +262,123 @@ export class AfipComponent implements OnInit {
             console.error('Error to write file', e);
         }
     }
+  }
+
+  async exportToXLSX() {
+    let json: any = [];
+    let date = new Date()
+    let day = `${(date.getDate())}`.padStart(2,'0');
+    let month = `${(date.getMonth()+1)}`.padStart(2,'0');
+    let year = date.getFullYear();
+    const formatter = new Intl.NumberFormat('es-AR', {
+      style: 'currency',
+      currency: 'ARS',
+    });
+
+    var wscols = [
+      {wch:5},
+      {wch:15},
+      {wch:20},
+      {wch:30},
+      {wch:30},
+      {wch:30},
+      {wch:30},
+      {wch:15},
+      {wch:15},
+      {wch:15},
+      {wch:10}
+    ];
+
+    let amount = 0;
+    let amount_iva = 0;
+
+    this.invoices.forEach((row) => {
+      json.push({
+        'Tipo': row.docName,
+        'Nro': row.docNumber,
+        'CAE': row.cae,
+        'Emisor': row.nameEmi,
+        'Emisor CUIT': row.cuitEmi,
+        'Receptor': row.nameRec,
+        'Receptor CUIT': row.cuitRec,
+        'Fecha': row.date,
+        'Importe': formatter.format(row.amount),
+        'Importe sin IVA 21': formatter.format((Number(row.amount) / 1.21)),
+        'Moneda': row.currency,
+      });
+
+      amount = amount + Number(row.amount);
+      amount_iva = amount_iva + (Number(row.amount) / 1.21);
+    });
+
+    json.push({
+      'Tipo': '',
+      'Nro': '',
+      'CAE': '',
+      'Emisor': '',
+      'Emisor CUIT': '',
+      'Receptor': '',
+      'Receptor CUIT': '',
+      'Fecha': '',
+      'Importe': formatter.format(amount),
+      'Importe sin IVA 21': formatter.format(amount_iva),
+      'Moneda': '',
+    });
+
+    const worksheet: XLSX.WorkSheet = XLSX.utils.json_to_sheet(json);
+    worksheet['!cols'] = wscols;
+    const workbook: XLSX.WorkBook = {Sheets: {'data': worksheet}, SheetNames: ['data']};
+
+    const letters = 'ABCDEFGHIJK';
+
+    for (let i = 0; i < letters.length; i++) {
+      worksheet[letters[i] + "1"].s = {
+        font: {
+          bold: true,
+        },
+      };
+    }
+    var wbout = XLSX.write(workbook, {bookType:'xlsx',  type: 'binary'});
+
+    let b = new Blob([this.s2ab(wbout)],{type:"application/vnd.ms-excel"});
+
+    var reader = new FileReader();
+    reader.readAsDataURL(b);
+    reader.onloadend = async function () {
+        var base64data = reader.result;
+        try {
+            const result = await Filesystem.writeFile({
+                path: 'invoices_afip_' + `${year}${month}${day}` + '.csv',
+                data: <string>base64data,
+                directory: Directory.Data,
+                recursive: true
+            });
+            let fileOpener: FileOpener = new FileOpener();
+            fileOpener.open(result.uri, 'application/vnd.ms-excel')
+                .then(() => console.log('File open'))
+                .catch(e => alert('Error to open file ' + JSON.stringify(e)));
+            console.log('File write', result.uri);
+        } catch (e) {
+            alert('Error to write file ' + e);
+        }
+    }
+
+    /*var link = document.createElement('a');
+    link.href = window.URL.createObjectURL(b);
+    link.download = 'demo.xlsx';
+
+    document.body.appendChild(link);
+
+    link.click();
+
+    document.body.removeChild(link);*/
+  }
+
+  s2ab(s: any) { 
+    var buf = new ArrayBuffer(s.length);
+    var view = new Uint8Array(buf);
+    for (var i=0; i<s.length; i++) view[i] = s.charCodeAt(i) & 0xFF; //convert to octet
+    return buf;    
   }
 
   openDialog(msg: string) {

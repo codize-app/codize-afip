@@ -5,14 +5,19 @@
 </div>
 <div class="row mb-2">
     <div class="col-6">
-        <button mat-raised-button color="warn" class="w-100" (click)="removeInvoices()" [disabled]="invoices.length == 0">Eliminar Facturas</button>
+        <button mat-raised-button color="accent" class="w-100" (click)="exportToCSV()" [disabled]="invoices.length == 0">Exportar CSV</button>
     </div>
     <div class="col-6">
-        <button mat-raised-button color="accent" class="w-100" (click)="exportToCSV()" [disabled]="invoices.length == 0">Exportar</button>
+        <button mat-raised-button color="accent" class="w-100" (click)="exportToXLSX()" [disabled]="invoices.length == 0">Exportar XLSX</button>
+    </div>
+</div>
+<div class="row mb-2">
+    <div class="col-12">
+        <button mat-raised-button color="warn" class="w-100" (click)="removeInvoices()" [disabled]="invoices.length == 0">Eliminar Facturas</button>
     </div>
 </div>
 
-<!--button mat-raised-button color="primary" class="w-100" (click)="test()">TEST</button-->
+<button mat-raised-button color="primary" class="w-100" (click)="test()">TEST</button>
 
 <div *ngIf="invoices.length > 0 && !loading" class="row">
     <div class="col-12">
