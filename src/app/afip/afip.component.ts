@@ -280,12 +280,12 @@ export class AfipComponent implements OnInit {
       {wch:15},
       {wch:20},
       {wch:30},
+      {wch:12},
       {wch:30},
-      {wch:30},
-      {wch:30},
+      {wch:12},
       {wch:15},
-      {wch:15},
-      {wch:15},
+      {wch:20},
+      {wch:20},
       {wch:10}
     ];
 
@@ -293,6 +293,7 @@ export class AfipComponent implements OnInit {
     let amount_iva = 0;
 
     this.invoices.forEach((row) => {
+      const date = new Date(row.date);
       json.push({
         'Tipo': row.docName,
         'Nro': row.docNumber,
@@ -301,7 +302,7 @@ export class AfipComponent implements OnInit {
         'Emisor CUIT': row.cuitEmi,
         'Receptor': row.nameRec,
         'Receptor CUIT': row.cuitRec,
-        'Fecha': row.date,
+        'Fecha': date.toLocaleString('es-AR', { year: 'numeric', month: '2-digit', day: '2-digit' }),
         'Importe': formatter.format(row.amount),
         'Importe sin IVA 21': formatter.format((Number(row.amount) / 1.21)),
         'Moneda': row.currency,
