@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, Inject } from '@angular/core';
+import { Component, OnInit, DoCheck, ViewChild, Inject } from '@angular/core';
 import {animate, state, style, transition, trigger} from '@angular/animations';
 import { MatTable } from '@angular/material/table';
 import { MatDialog, MAT_DIALOG_DATA } from '@angular/material/dialog';
@@ -55,23 +55,30 @@ export class AfipComponent implements OnInit {
     }
   }
 
+  ngDoCheck(): void {}
+
   scanQR() {
-    this.barcodeScanner.scan({formats: 'QR_CODE'})
+    this.barcodeScanner.scan({
+      formats: 'QR_CODE',
+      prompt: 'Coloque un Código QR de AFIP en el Escaner.',
+      resultDisplayDuration: 0
+    })
     .then(barcodeData => {
-      this.processQR(barcodeData.text);
+      if (barcodeData.cancelled === false) {
+        this.processQR(barcodeData.text);
+      }
     }).catch(err => {
       alert(err);
     });
   }
 
-  test() {
+  async test() {
     // FA-C
-    const urlText = "https://www.afip.gob.ar/fe/qr/?p=eyJ2ZXIiOjEsImZlY2hhIjoiMjAyMi0wMS0yNSIsImN1aXQiOjIwMzY3MzYyNDczLCJwdG9WdGEiOjIsInRpcG9DbXAiOjExLCJucm9DbXAiOjg4LCJpbXBvcnRlIjoyMDAwLCJtb25lZGEiOiJQRVMiLCJjdHoiOjEsInRpcG9Eb2NSZWMiOjgwLCJucm9Eb2NSZWMiOjMwNzE2NzQzMjk5LCJ0aXBvQ29kQXV0IjoiRSIsImNvZEF1dCI6NzIwNDMzMjQ5NjcwOTl9";
+    const urlText1 = "https://www.afip.gob.ar/fe/qr/?p=eyJ2ZXIiOjEsImZlY2hhIjoiMjAyMi0wMS0yNSIsImN1aXQiOjIwMzY3MzYyNDczLCJwdG9WdGEiOjIsInRpcG9DbXAiOjExLCJucm9DbXAiOjg4LCJpbXBvcnRlIjoyMDAwLCJtb25lZGEiOiJQRVMiLCJjdHoiOjEsInRpcG9Eb2NSZWMiOjgwLCJucm9Eb2NSZWMiOjMwNzE2NzQzMjk5LCJ0aXBvQ29kQXV0IjoiRSIsImNvZEF1dCI6NzIwNDMzMjQ5NjcwOTl9";
     // FA-A
-    // const urlText = "https://www.afip.gob.ar/fe/qr/?p=eyJ2ZXIiOiAxLCAiZmVjaGEiOiAiMjAyMi0wMi0wMSIsICJjdWl0IjogMzA3MTY3MTg1MjksICJwdG9WdGEiOiAyLCAidGlwb0NtcCI6IDEsICJucm9DbXAiOiAxNjcsICJpbXBvcnRlIjogMTgxNTAuMCwgIm1vbmVkYSI6ICJQRVMiLCAiY3R6IjogMS4wLCAidGlwb0NvZEF1dCI6ICJFIiwgImNvZEF1dCI6IDcyMDU5MDA0NTQ5NTc1LCAibnJvRG9jUmVjIjogMjAzNzAzODYwNTcsICJ0aXBvRG9jUmVjIjogODB9";
+    const urlText2 = "https://www.afip.gob.ar/fe/qr/?p=eyJ2ZXIiOiAxLCAiZmVjaGEiOiAiMjAyMi0wMi0wMSIsICJjdWl0IjogMzA3MTY3MTg1MjksICJwdG9WdGEiOiAyLCAidGlwb0NtcCI6IDEsICJucm9DbXAiOiAxNjcsICJpbXBvcnRlIjogMTgxNTAuMCwgIm1vbmVkYSI6ICJQRVMiLCAiY3R6IjogMS4wLCAidGlwb0NvZEF1dCI6ICJFIiwgImNvZEF1dCI6IDcyMDU5MDA0NTQ5NTc1LCAibnJvRG9jUmVjIjogMjAzNzAzODYwNTcsICJ0aXBvRG9jUmVjIjogODB9";
     // FA-B
-    // const urlText = "https://www.afip.gob.ar/fe/qr/?p=eyJjb2RBdXQiOjcyMDQ2MTkwMDUyNDc3LCJjdHoiOjEsImN1aXQiOjMwNzEwMTE0MTc2LCJmZWNoYSI6IjIwMjItMDEtMjMiLCJpbXBvcnRlIjo2Mzk4LjAwLCJtb25lZGEiOiJQRVMiLCJucm9DbXAiOjEwMDk3OTksIm5yb0RvY1JlYyI6MCwicHRvVnRhIjozMSwidGlwb0NtcCI6NiwidGlwb0NvZEF1dCI6IkUiLCJ0aXBvRG9jUmVjIjo5NiwidmVyIjoxfQ=="
-    this.processQR(urlText);
+    const urlText3 = "https://www.afip.gob.ar/fe/qr/?p=eyJjb2RBdXQiOjcyMDQ2MTkwMDUyNDc3LCJjdHoiOjEsImN1aXQiOjMwNzEwMTE0MTc2LCJmZWNoYSI6IjIwMjItMDEtMjMiLCJpbXBvcnRlIjo2Mzk4LjAwLCJtb25lZGEiOiJQRVMiLCJucm9DbXAiOjEwMDk3OTksIm5yb0RvY1JlYyI6MCwicHRvVnRhIjozMSwidGlwb0NtcCI6NiwidGlwb0NvZEF1dCI6IkUiLCJ0aXBvRG9jUmVjIjo5NiwidmVyIjoxfQ=="
   }
 
   removeInvoices(): void {
@@ -79,7 +86,7 @@ export class AfipComponent implements OnInit {
     localStorage.setItem('invoices', JSON.stringify(this.invoices));
   }
 
-  async processQR(t: string) {
+  async processQR(t: string, i: number = 0) {
     this.loading = true;
     const url = new URL(t);
     const p: any = url.searchParams.get('p');
@@ -87,10 +94,11 @@ export class AfipComponent implements OnInit {
     const decode = decodeURIComponent(escape(atob( encode ))).replace(/\'/g, '"');
     const obj = JSON.parse(decode);
     console.log(obj);
+
     if (url.host === 'www.afip.gob.ar' || url.host === 'afip.gob.ar') {
       if (this.invoices.find(x => x.cae === obj.codAut) !== undefined) {
-        this.loading = false;
         this.openDialog('¡Factura ya escaneada!');
+        this.loading = false;
       } else {
         let newinvoice = await this.processQrFeAr(obj);
         this.http.get<any>('https://afip.tangofactura.com/Rest/GetContribuyenteFull?cuit=' + obj.cuit,{}).subscribe(dataE => {
@@ -102,32 +110,33 @@ export class AfipComponent implements OnInit {
                   newinvoice.nameRec = dataR.Contribuyente.nombre;
                   this.invoices.push(newinvoice);
                   localStorage.setItem('invoices', JSON.stringify(this.invoices));
-                  this.loading = false;
                   if (this.table) {
                     this.table!.renderRows();
                   }
-                }
+                  this.loading = false;
+                } else {}
               }, (err: any) => {
-                this.loading = false;
                 this.openDialog(err);
+                this.loading = false;
               });
             } else {
               newinvoice.nameRec = 'Consumidor Final';
               this.invoices.push(newinvoice);
               localStorage.setItem('invoices', JSON.stringify(this.invoices));
-              this.loading = false;
               if (this.table) {
                 this.table!.renderRows();
               }
+              this.loading = false;
             }
-          }
+          } else {}
         }, (err: any) => {
-          this.loading = false;
           this.openDialog(err);
+          this.loading = false;
         });
       }
     } else {
       this.openDialog('El QR escaneado no es de AFIP');
+      this.loading = false;
     }
   }
 
