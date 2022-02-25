@@ -270,10 +270,6 @@ export class AfipComponent implements OnInit {
     let day = `${(date.getDate())}`.padStart(2,'0');
     let month = `${(date.getMonth()+1)}`.padStart(2,'0');
     let year = date.getFullYear();
-    const formatter = new Intl.NumberFormat('es-AR', {
-      style: 'currency',
-      currency: 'ARS',
-    });
 
     var wscols = [
       {wch:5},
@@ -303,8 +299,8 @@ export class AfipComponent implements OnInit {
         'Receptor': row.nameRec,
         'Receptor CUIT': row.cuitRec,
         'Fecha': date.toLocaleString('es-AR', { year: 'numeric', month: '2-digit', day: '2-digit' }),
-        'Importe': formatter.format(row.amount),
-        'Importe sin IVA 21': formatter.format((Number(row.amount) / 1.21)),
+        'Importe': row.amount,
+        'Importe sin IVA 21': Number((Number(row.amount) / 1.21).toFixed(2)),
         'Moneda': row.currency,
       });
 
@@ -321,8 +317,8 @@ export class AfipComponent implements OnInit {
       'Receptor': '',
       'Receptor CUIT': '',
       'Fecha': '',
-      'Importe': formatter.format(amount),
-      'Importe sin IVA 21': formatter.format(amount_iva),
+      'Importe': amount,
+      'Importe sin IVA 21': Number(amount_iva.toFixed(2)),
       'Moneda': '',
     });
 
@@ -339,6 +335,16 @@ export class AfipComponent implements OnInit {
         },
       };
     }
+
+    for (let i = 2; i < this.invoices.length + 3; i++) {
+      worksheet["I" + (i)].s = {
+        numFmt: '$#.###,##'
+      };
+      worksheet["J" + (i)].s = {
+        numFmt: '$#.###,##'
+      };
+    }
+
     var wbout = XLSX.write(workbook, {bookType:'xlsx',  type: 'binary'});
 
     let b = new Blob([this.s2ab(wbout)],{type:"application/vnd.ms-excel"});
