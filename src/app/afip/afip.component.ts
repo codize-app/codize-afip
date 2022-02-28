@@ -5,6 +5,8 @@ import { MatDialog, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { BarcodeScanner } from '@awesome-cordova-plugins/barcode-scanner/ngx';
 import { HttpClient } from '@angular/common/http';
 
+import { Globals } from '../app.globals';
+
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { FileOpener } from '@ionic-native/file-opener/ngx';
 
@@ -42,7 +44,10 @@ export class AfipComponent implements OnInit {
   expandedElement: InvoiceElement | null | undefined;
   @ViewChild(MatTable) table: MatTable<InvoiceElement> | undefined;
 
+  globals = Globals;
   loading = false;
+  qrs: any = [];
+  qrErrors: any = [];
 
   constructor(private barcodeScanner: BarcodeScanner, public dialog: MatDialog, private http: HttpClient) { }
 
@@ -55,7 +60,23 @@ export class AfipComponent implements OnInit {
     }
   }
 
-  ngDoCheck(): void {}
+  ngDoCheck(): void {
+    if (this.qrs.length > 0) {
+      console.log(this.qrs);
+      let res = this.qrs.every((i: any) => {
+        return i === false
+      });
+      if (res) {
+        this.loading = false;
+        this.qrs.length = 0;
+        if (this.qrErrors.length > 0) {
+          this.openDialog('Algunos QR de facturas tienen errores y no se pudieron importar masivamente.');
+          this.qrErrors.length = 0;
+        }
+      }
+    }
+    this.globals = Globals;
+  }
 
   scanQR() {
     this.barcodeScanner.scan({
@@ -72,6 +93,24 @@ export class AfipComponent implements OnInit {
     });
   }
 
+  scanQRContinue() {
+    this.barcodeScanner.scan({
+      formats: 'QR_CODE',
+      prompt: 'Coloque un Código QR de AFIP en el Escaner. Puede escanear todas las Facturas AFIP que desee. Al finalizar, oprima en el botón Volver.',
+      resultDisplayDuration: 0
+    })
+    .then(barcodeData => {
+      if (barcodeData.cancelled === false) {
+        this.qrs.push(barcodeData.text);
+        this.scanQRContinue();
+      } else {
+        this.processQRMassive();
+      }
+    }).catch(err => {
+      alert(err);
+    });
+  }
+
   async test() {
     // FA-C
     const urlText1 = "https://www.afip.gob.ar/fe/qr/?p=eyJ2ZXIiOjEsImZlY2hhIjoiMjAyMi0wMS0yNSIsImN1aXQiOjIwMzY3MzYyNDczLCJwdG9WdGEiOjIsInRpcG9DbXAiOjExLCJucm9DbXAiOjg4LCJpbXBvcnRlIjoyMDAwLCJtb25lZGEiOiJQRVMiLCJjdHoiOjEsInRpcG9Eb2NSZWMiOjgwLCJucm9Eb2NSZWMiOjMwNzE2NzQzMjk5LCJ0aXBvQ29kQXV0IjoiRSIsImNvZEF1dCI6NzIwNDMzMjQ5NjcwOTl9";
@@ -79,6 +118,12 @@ export class AfipComponent implements OnInit {
     const urlText2 = "https://www.afip.gob.ar/fe/qr/?p=eyJ2ZXIiOiAxLCAiZmVjaGEiOiAiMjAyMi0wMi0wMSIsICJjdWl0IjogMzA3MTY3MTg1MjksICJwdG9WdGEiOiAyLCAidGlwb0NtcCI6IDEsICJucm9DbXAiOiAxNjcsICJpbXBvcnRlIjogMTgxNTAuMCwgIm1vbmVkYSI6ICJQRVMiLCAiY3R6IjogMS4wLCAidGlwb0NvZEF1dCI6ICJFIiwgImNvZEF1dCI6IDcyMDU5MDA0NTQ5NTc1LCAibnJvRG9jUmVjIjogMjAzNzAzODYwNTcsICJ0aXBvRG9jUmVjIjogODB9";
     // FA-B
     const urlText3 = "https://www.afip.gob.ar/fe/qr/?p=eyJjb2RBdXQiOjcyMDQ2MTkwMDUyNDc3LCJjdHoiOjEsImN1aXQiOjMwNzEwMTE0MTc2LCJmZWNoYSI6IjIwMjItMDEtMjMiLCJpbXBvcnRlIjo2Mzk4LjAwLCJtb25lZGEiOiJQRVMiLCJucm9DbXAiOjEwMDk3OTksIm5yb0RvY1JlYyI6MCwicHRvVnRhIjozMSwidGlwb0NtcCI6NiwidGlwb0NvZEF1dCI6IkUiLCJ0aXBvRG9jUmVjIjo5NiwidmVyIjoxfQ=="
+  
+    // Massive Import
+    /*this.qrs.push(urlText1);
+    this.qrs.push(urlText2);
+    this.qrs.push(urlText3);
+    this.processQRMassive();*/
   }
 
   removeInvoices(): void {
@@ -86,7 +131,7 @@ export class AfipComponent implements OnInit {
     localStorage.setItem('invoices', JSON.stringify(this.invoices));
   }
 
-  async processQR(t: string, i: number = 0) {
+  async processQR(t: string) {
     this.loading = true;
     const url = new URL(t);
     const p: any = url.searchParams.get('p');
@@ -137,6 +182,62 @@ export class AfipComponent implements OnInit {
     } else {
       this.openDialog('El QR escaneado no es de AFIP');
       this.loading = false;
+    }
+  }
+
+  async processQRMassive() {
+    this.loading = true;
+    for (let i = 0; i < this.qrs.length; i++) {
+      const t = this.qrs[i];
+      const url = new URL(t);
+      const p: any = url.searchParams.get('p');
+      let encode = p.replace(/b\'(.*)\'/, '$1').replace(/\n/g, '');
+      const decode = decodeURIComponent(escape(atob( encode ))).replace(/\'/g, '"');
+      const obj = JSON.parse(decode);
+
+      if (url.host === 'www.afip.gob.ar' || url.host === 'afip.gob.ar') {
+        if (this.invoices.find(x => x.cae === obj.codAut) !== undefined) {
+          this.qrErrors.push(obj.codAut);
+          this.qrs[i] = false;
+        } else {
+          let newinvoice = await this.processQrFeAr(obj);
+          this.http.get<any>('https://afip.tangofactura.com/Rest/GetContribuyenteFull?cuit=' + obj.cuit,{}).subscribe(dataE => {
+            if (dataE.Contribuyente) {
+              newinvoice.nameEmi = dataE.Contribuyente.nombre;
+              if (obj.nroDocRec !== 0) {
+                this.http.get<any>('https://afip.tangofactura.com/Rest/GetContribuyenteFull?cuit=' + obj.nroDocRec,{}).subscribe(dataR => {
+                  if (dataR.Contribuyente) {
+                    newinvoice.nameRec = dataR.Contribuyente.nombre;
+                    this.invoices.push(newinvoice);
+                    localStorage.setItem('invoices', JSON.stringify(this.invoices));
+                    if (this.table) {
+                      this.table!.renderRows();
+                    }
+                    this.qrs[i] = false;
+                  } else {}
+                }, (err: any) => {
+                  this.qrs[i] = false;
+                  this.qrErrors.push(obj.codAut);
+                });
+              } else {
+                newinvoice.nameRec = 'Consumidor Final';
+                this.invoices.push(newinvoice);
+                localStorage.setItem('invoices', JSON.stringify(this.invoices));
+                if (this.table) {
+                  this.table!.renderRows();
+                }
+                this.qrs[i] = false;
+              }
+            } else {}
+          }, (err: any) => {
+            this.qrs[i] = false;
+            this.qrErrors.push(obj.codAut);
+          });
+        }
+      } else {
+        this.qrs[i] = false;
+        this.qrErrors.push('QR no es de AFIP');
+      }
     }
   }
 

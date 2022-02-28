@@ -3,10 +3,10 @@
     <mat-toolbar-row class="ps-2 pe-2">
       <div class="container ps-0 pe-0">
         <div class="row">
-          <div class="col">
-            <!--button mat-icon-button aria-label="Sidenav Menu">
-                <mat-icon>menu</mat-icon>
-            </button-->
+          <div class="col text-center d-flex flex-wrap align-items-center">
+            <mat-slide-toggle color="primary" [(ngModel)]="globals.scanContinue">
+              ∞
+            </mat-slide-toggle>
           </div>
           <div class="col text-center d-flex flex-wrap align-items-center codize-logo overflow-hidden position-relative">
               <img src="./assets/img/codize-logo.webp" class="img-fluid" />

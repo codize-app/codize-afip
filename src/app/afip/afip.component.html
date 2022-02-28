@@ -1,6 +1,13 @@
 <div class="row mb-2">
-    <div class="col-12">
-        <button mat-raised-button color="primary" class="w-100" (click)="scanQR()">Escanear QR</button>
+    <div class="col-12" *ngIf="!globals.scanContinue">
+        <button mat-raised-button color="primary" class="w-100" (click)="scanQR()">
+            Escanear QR
+        </button>
+    </div>
+    <div class="col-12" *ngIf="globals.scanContinue">
+        <button mat-raised-button color="primary" class="w-100" (click)="scanQRContinue()">
+            Escanear QR ∞
+        </button>
     </div>
 </div>
 <div class="row mb-2">
