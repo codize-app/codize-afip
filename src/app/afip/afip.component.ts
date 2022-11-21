@@ -1,7 +1,7 @@
 import { Component, OnInit, DoCheck, ViewChild, Inject } from '@angular/core';
 import {animate, state, style, transition, trigger} from '@angular/animations';
-import { MatTable } from '@angular/material/table';
-import { MatDialog, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatLegacyTable as MatTable } from '@angular/material/legacy-table';
+import { MatLegacyDialog as MatDialog, MAT_LEGACY_DIALOG_DATA as MAT_DIALOG_DATA } from '@angular/material/legacy-dialog';
 import { BarcodeScanner } from '@awesome-cordova-plugins/barcode-scanner/ngx';
 import { HttpClient } from '@angular/common/http';
 

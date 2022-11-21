@@ -1,10 +1,11 @@
 @use '@angular/material' as mat;
-@import '~bootstrap/scss/bootstrap';
-@import '~bootstrap/scss/bootstrap-reboot';
-@import '~bootstrap/scss/bootstrap-grid';
-@import '~@angular/material/theming';
+@import 'node_modules/bootstrap/scss/bootstrap';
+@import 'node_modules/bootstrap/scss/bootstrap-reboot';
+@import 'node_modules/bootstrap/scss/bootstrap-grid';
+@import '@angular/material/theming';
 
-@include mat.core();
+@include mat.all-legacy-component-typographies();
+@include mat.legacy-core();
 
 $codize-afip-primary: mat.define-palette(mat.$blue-palette, 700);
 $codize-afip-accent: mat.define-palette(mat.$blue-grey-palette, 900);
@@ -19,7 +20,7 @@ $codize-afip-theme: mat.define-light-theme((
   )
 ));
 
-@include mat.all-component-themes($codize-afip-theme);
+@include mat.all-legacy-component-themes($codize-afip-theme);
 
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
