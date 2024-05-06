@@ -119,11 +119,15 @@ export class AfipComponent implements OnInit {
     // FA-B
     const urlText3 = "https://www.afip.gob.ar/fe/qr/?p=eyJjb2RBdXQiOjcyMDQ2MTkwMDUyNDc3LCJjdHoiOjEsImN1aXQiOjMwNzEwMTE0MTc2LCJmZWNoYSI6IjIwMjItMDEtMjMiLCJpbXBvcnRlIjo2Mzk4LjAwLCJtb25lZGEiOiJQRVMiLCJucm9DbXAiOjEwMDk3OTksIm5yb0RvY1JlYyI6MCwicHRvVnRhIjozMSwidGlwb0NtcCI6NiwidGlwb0NvZEF1dCI6IkUiLCJ0aXBvRG9jUmVjIjo5NiwidmVyIjoxfQ=="
   
+    // FA QR Odoo
+    const urlText4 = "https://serviciosweb.afip.gob.ar/genericos/comprobantes/cae.aspx?p=eyJ2ZXIiOiAxLCAiZmVjaGEiOiAiMjAyNC0wMy0wMSIsICJjdWl0IjogMzA3MTU1MDg0NjYsICJwdG9WdGEiOiAzLCAidGlwb0NtcCI6IDYsICJucm9DbXAiOiA0NDY5LCAiaW1wb3J0ZSI6IDk4NjAuMCwgIm1vbmVkYSI6ICJQRVMiLCAiY3R6IjogMS4wLCAidGlwb0NvZEF1dCI6ICJFIiwgImNvZEF1dCI6IDc0MDk2MDQ1NDM0MTM2LCAidGlwb0RvY1JlYyI6IDk2LCAibnJvRG9jUmVjIjogMjUxNjI5Nzh9";
+
     // Massive Import
     /*this.qrs.push(urlText1);
     this.qrs.push(urlText2);
     this.qrs.push(urlText3);
     this.processQRMassive();*/
+    this.processQR(urlText4);
   }
 
   removeInvoices(): void {
@@ -140,17 +144,17 @@ export class AfipComponent implements OnInit {
     const obj = JSON.parse(decode);
     console.log(obj);
 
-    if (url.host === 'www.afip.gob.ar' || url.host === 'afip.gob.ar') {
+    if (url.host === 'www.afip.gob.ar' || url.host === 'afip.gob.ar' || url.host === 'serviciosweb.afip.gob.ar') {
       if (this.invoices.find(x => x.cae === obj.codAut) !== undefined) {
         this.openDialog('¡Factura ya escaneada!');
         this.loading = false;
       } else {
         let newinvoice = await this.processQrFeAr(obj);
-        this.http.get<any>('https://afip.tangofactura.com/Rest/GetContribuyenteFull?cuit=' + obj.cuit,{}).subscribe(dataE => {
+        this.http.get<any>('https://www.tangofactura.com/Rest/GetContribuyente?cuit=' + obj.cuit,{}).subscribe(dataE => {
           if (dataE.Contribuyente) {
             newinvoice.nameEmi = dataE.Contribuyente.nombre;
-            if (obj.nroDocRec !== 0) {
-              this.http.get<any>('https://afip.tangofactura.com/Rest/GetContribuyenteFull?cuit=' + obj.nroDocRec,{}).subscribe(dataR => {
+            if (obj.nroDocRec !== 0 && obj.nroDocRec.toString().length >= 11) {
+              this.http.get<any>('https://www.tangofactura.com/Rest/GetContribuyente?cuit=' + obj.nroDocRec,{}).subscribe(dataR => {
                 if (dataR.Contribuyente) {
                   newinvoice.nameRec = dataR.Contribuyente.nombre;
                   this.invoices.push(newinvoice);
@@ -159,8 +163,11 @@ export class AfipComponent implements OnInit {
                     this.table!.renderRows();
                   }
                   this.loading = false;
-                } else {}
+                } else {
+                  console.log(dataR);
+                }
               }, (err: any) => {
+                console.log(err);
                 this.openDialog(err);
                 this.loading = false;
               });
@@ -175,6 +182,7 @@ export class AfipComponent implements OnInit {
             }
           } else {}
         }, (err: any) => {
+          console.log(err);
           this.openDialog(err);
           this.loading = false;
         });
