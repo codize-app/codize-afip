@@ -1,6 +1,9 @@
 {
-    "/api": {
-    "target": "https://www.tangofactura.com",
-    "secure": false
+    "/tango": {
+      "target": "https://www.tangofactura.com",
+      "secure": false,
+      "pathRewrite": {"^/tango": "https://www.tangofactura.com"},
+      "changeOrigin": true,
+      "logLevel": "debug"
     }
-}
+  }

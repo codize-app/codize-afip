@@ -32,8 +32,7 @@
 
 <div *ngIf="invoices.length > 0" class="row">
     <div class="col-12">
-        <table mat-table [dataSource]="invoices" class="mat-elevation-z8 w-100" multiTemplateDataRows>
-      
+        <table mat-table *ngIf="invoices" [dataSource]="invoices" class="mat-elevation-z8 w-100" multiTemplateDataRows>
             <ng-container matColumnDef="docName">
               <th class="ps-2 pe-2" mat-header-cell *matHeaderCellDef> Tipo </th>
               <td class="ps-2 pe-2" mat-cell *matCellDef="let element"> {{element.docName}} </td>
@@ -50,26 +49,26 @@
                        [@detailExpand]="element == expandedElement ? 'expanded' : 'collapsed'">
                     <div class="p-1 w-50 border-end">
                         <span class="badge bg-secondary mb-1">{{element.date | date:'dd/MM/yyyy'}}</span><br />
-                        <h3 class="mb-0">{{element.amount | currency:'ARS':'symbol':'':'es-AR'}}</h3>
+                        <h5 class="mb-0"><small>{{element.amount | currency:'ARS':'symbol':'':'es-AR'}}</small></h5>
                         <small><b>Moneda:</b> {{element.currency}}</small>
                     </div>
                     <div class="p-1 w-50">
-                        <h5 class="mb-1">{{element.docName}} {{element.docNumber}}</h5>
-                        <h5 class="mb-1"><b>Emisor:</b> {{element.nameEmi}}</h5>
-                        <h5 class="mb-1"><b>Receptor:</b> {{element.nameRec}}</h5>
+                        <h6 class="mb-1"><small>{{element.docName}} {{element.docNumber}}</small></h6>
+                        <h6 class="mb-1"><small><b>Emisor:</b> {{element.nameEmi}}</small></h6>
+                        <h6 class="mb-1"><small><b>Receptor:</b> {{element.nameRec}}</small></h6>
                     </div>
                   </div>
                 </td>
             </ng-container>
 
-            <tr class="ps-2 pe-2" mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-            <tr class="ps-2 pe-2" mat-row *matRowDef="let element; columns: displayedColumns;"
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let element; columns: displayedColumns;"
                 class="example-element-row"
                 [class.example-expanded-row]="expandedElement === element"
                 (click)="expandedElement = expandedElement === element ? null : element">
             </tr>
-            <tr mat-row *matRowDef="let row; columns: ['expandedDetail']" class="example-detail-row ps-2 pe-2"></tr>
-          
+            <tr mat-row *matRowDef="let row; columns: ['expandedDetail']" class="example-detail-row"></tr>
+            
         </table>
     </div>
 </div>

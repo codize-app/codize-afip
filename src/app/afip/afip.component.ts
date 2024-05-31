@@ -3,7 +3,7 @@ import {animate, state, style, transition, trigger} from '@angular/animations';
 import { MatTable } from '@angular/material/table';
 import { MatDialog, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { BarcodeScanner } from '@awesome-cordova-plugins/barcode-scanner/ngx';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 
 import { Globals } from '../app.globals';
 
@@ -143,6 +143,11 @@ export class AfipComponent implements OnInit {
     const decode = decodeURIComponent(escape(atob( encode ))).replace(/\'/g, '"');
     const obj = JSON.parse(decode);
     console.log(obj);
+    const httpOptions = {
+      headers: new HttpHeaders({ 
+        'Access-Control-Allow-Origin':'*',
+      })
+    };
 
     if (url.host === 'www.afip.gob.ar' || url.host === 'afip.gob.ar' || url.host === 'serviciosweb.afip.gob.ar') {
       if (this.invoices.find(x => x.cae === obj.codAut) !== undefined) {
@@ -150,11 +155,19 @@ export class AfipComponent implements OnInit {
         this.loading = false;
       } else {
         let newinvoice = await this.processQrFeAr(obj);
-        this.http.get<any>('https://www.tangofactura.com/Rest/GetContribuyente?cuit=' + obj.cuit,{}).subscribe(dataE => {
+        this.invoices.push(newinvoice);
+        localStorage.setItem('invoices', JSON.stringify(this.invoices));
+        setTimeout(() => {
+          if (this.table) {
+            this.table!.renderRows();
+          }
+          this.loading = false;
+        }, 1);
+        /*this.http.get<any>('./tango/Rest/GetContribuyente?cuit=' + obj.cuit, httpOptions).subscribe(dataE => {
           if (dataE.Contribuyente) {
             newinvoice.nameEmi = dataE.Contribuyente.nombre;
             if (obj.nroDocRec !== 0 && obj.nroDocRec.toString().length >= 11) {
-              this.http.get<any>('https://www.tangofactura.com/Rest/GetContribuyente?cuit=' + obj.nroDocRec,{}).subscribe(dataR => {
+              this.http.get<any>('./tango/Rest/GetContribuyente?cuit=' + obj.nroDocRec, httpOptions).subscribe(dataR => {
                 if (dataR.Contribuyente) {
                   newinvoice.nameRec = dataR.Contribuyente.nombre;
                   this.invoices.push(newinvoice);
@@ -168,7 +181,7 @@ export class AfipComponent implements OnInit {
                 }
               }, (err: any) => {
                 console.log(err);
-                this.openDialog(err);
+                this.openDialog(JSON.stringify(err));
                 this.loading = false;
               });
             } else {
@@ -183,9 +196,9 @@ export class AfipComponent implements OnInit {
           } else {}
         }, (err: any) => {
           console.log(err);
-          this.openDialog(err);
+          this.openDialog(JSON.stringify(err));
           this.loading = false;
-        });
+        });*/
       }
     } else {
       this.openDialog('El QR escaneado no es de AFIP');
@@ -209,7 +222,15 @@ export class AfipComponent implements OnInit {
           this.qrs[i] = false;
         } else {
           let newinvoice = await this.processQrFeAr(obj);
-          this.http.get<any>('https://afip.tangofactura.com/Rest/GetContribuyenteFull?cuit=' + obj.cuit,{}).subscribe(dataE => {
+          this.invoices.push(newinvoice);
+          localStorage.setItem('invoices', JSON.stringify(this.invoices));
+          setTimeout(() => {
+            if (this.table) {
+              this.table!.renderRows();
+            }
+            this.qrs[i] = false;
+          }, 1);
+          /*this.http.get<any>('https://afip.tangofactura.com/Rest/GetContribuyenteFull?cuit=' + obj.cuit,{}).subscribe(dataE => {
             if (dataE.Contribuyente) {
               newinvoice.nameEmi = dataE.Contribuyente.nombre;
               if (obj.nroDocRec !== 0) {
@@ -240,7 +261,7 @@ export class AfipComponent implements OnInit {
           }, (err: any) => {
             this.qrs[i] = false;
             this.qrErrors.push(obj.codAut);
-          });
+          });*/
         }
       } else {
         this.qrs[i] = false;
